@@ -42,7 +42,6 @@
     <type fullname="FlameDemo.UI.Popups.InfoPopup" preserve="all" />
     <type fullname="FlameDemo.UI.Popups.InventoryPopup.InventoryPopup" preserve="all" />
     <type fullname="FlameDemo.UI.Popups.LoadingScreenPopup" preserve="all" />
-    <type fullname="FlameDemo.UI.Popups.NetworkLoadingPopup" preserve="all" />
     <type fullname="FlameDemo.UI.Popups.PlayerIndicatorsPopup.PlayerIndicatorsPopup" preserve="all" />
     <type fullname="FlameDemo.UI.Popups.PlayerIndicatorsPopup.Views.PlayerIndicatorView" preserve="all" />
     <type fullname="FlameDemo.UI.Popups.ThrowChargePopup.ThrowChargePopup" preserve="all" />
@@ -127,7 +126,6 @@
     <type fullname="UnityEditor.Audio.AudioMixerSnapshotController" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-    <type fullname="UnityEngine.Animation" preserve="all" />
     <type fullname="UnityEngine.AnimationClip" preserve="all" />
     <type fullname="UnityEngine.Animator" preserve="all" />
     <type fullname="UnityEngine.Avatar" preserve="all" />
