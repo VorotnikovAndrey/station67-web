@@ -78,7 +78,10 @@
           "У кабіні грає радіо. Пожежа на пісні не зважає."
         ];
         var tipSeconds = 7;
-        var gameShowsItsOwnScreenWithin = 20000;
+        // The download fills this share of the bar; the game's start-up steps (checks, lobby, Photon) fill the rest.
+        var downloadShare = 0.6;
+        // If the game never says its start-up is over, the page still steps aside.
+        var startUpGivesUpAfter = 60000;
 
         var canvas = document.getElementById("unity-canvas");
         var loader = document.getElementById("loader");
@@ -152,16 +155,28 @@
         }
         toast.querySelector("button").onclick = function () { toast.hidden = true; };
 
-        // The game calls this (WebPage.HideLoader) once its own loading screen, with the same art and layout, is up.
+        // The game carries its start-up progress on here (WebPage.SetLoaderProgress)...
+        window.station67SetLoaderProgress = function (progress) {
+          if (hidden || failed) {
+            return;
+          }
+          var share = Math.min(1, Math.max(0, progress));
+          target = Math.max(target, downloadShare + (1 - downloadShare) * share);
+        };
+
+        // ...and calls this (WebPage.HideLoader) when its start-up is over: the bar fills and the screen fades onto the game.
         window.station67HideLoader = function () {
           if (hidden || failed) {
             return;
           }
-          hidden = true;
-          clearInterval(tipTimer);
-          loader.classList.add("gone");
-          setTimeout(function () { loader.style.display = "none"; }, 600);
-          canvas.focus();
+          target = 1;
+          setTimeout(function () {
+            hidden = true;
+            clearInterval(tipTimer);
+            loader.classList.add("gone");
+            setTimeout(function () { loader.style.display = "none"; }, 600);
+            canvas.focus();
+          }, 350);
         };
 
         // Fullscreen is the page's: a click asks the browser for it. The canvas already fills the window.
@@ -273,16 +288,17 @@
         script.src = "Build/Out.loader.js";
         script.onload = function () {
           createUnityInstance(canvas, config, function (progress) {
-            target = Math.max(target, progress);
+            target = Math.max(target, progress * downloadShare);
             if (progress >= 0.9 && !failed) {
               setStatus("Розпаковуємо…", "ще кілька секунд");
             }
           }).then(function (instance) {
             started = true;
-            target = 1;
-            setStatus("Заступаємо на зміну…", "запуск гри");
+            target = Math.max(target, downloadShare);
+            // The same words the game's loading screen has for this stage: the screen reads as one from start to lobby.
+            setStatus("Виходимо на зв’язок…", "запуск зміни");
             window.station67 = instance;
-            setTimeout(window.station67HideLoader, gameShowsItsOwnScreenWithin);
+            setTimeout(window.station67HideLoader, startUpGivesUpAfter);
           }).catch(function (message) {
             showProblem("Гра не запустилася", String(message));
           });
