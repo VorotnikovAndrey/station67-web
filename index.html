@@ -1,133 +1,262 @@
 <!DOCTYPE html>
-<html lang="en-us">
+<html lang="uk">
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | RetroStyle Games Demo</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes">
+    <title>Station 67 — кооперативне гасіння пожеж</title>
+    <meta name="description" content="Кооперативна фізична комедія від першої особи: пожежники, рукави, сокири, батути й вода. 1–4 гравці, у браузері.">
+    <meta name="theme-color" content="#14171B">
+    <meta property="og:title" content="Station 67">
+    <meta property="og:description" content="Кооперативна фізична комедія від першої особи: пожежники, рукави, сокири, батути й вода. 1–4 гравці.">
+    <meta property="og:image" content="TemplateData/keyart.jpg">
+    <link rel="icon" type="image/png" href="TemplateData/favicon.png">
+    <link rel="apple-touch-icon" href="TemplateData/apple-touch-icon.png">
+    <link rel="preload" href="TemplateData/keyart.jpg" as="image">
+    <link rel="preload" href="TemplateData/fonts/SofiaSansCondensed-Black.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="TemplateData/fonts/SofiaSansCondensed-ExtraBold.woff" as="font" type="font/woff" crossorigin>
+    <link rel="preload" href="TemplateData/fonts/SofiaSansCondensed-Medium.woff" as="font" type="font/woff" crossorigin>
     <link rel="stylesheet" href="TemplateData/style.css">
   </head>
   <body>
-    <div id="unity-container" class="unity-desktop">
-      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
-      <div id="unity-loading-bar">
-        <div id="unity-logo"></div>
-        <div id="unity-progress-bar-empty">
-          <div id="unity-progress-bar-full"></div>
+    <canvas id="unity-canvas" tabindex="-1"></canvas>
+
+    <div id="loader" aria-live="polite">
+      <div class="art"></div>
+      <div class="shade shade-left"></div>
+      <div class="shade shade-bottom"></div>
+
+      <div class="logo">
+        <div class="badge"><img src="TemplateData/flame.png" alt=""></div>
+        <div class="titles">
+          <div class="title">Station 67</div>
+          <div class="subtitle">Кооперативне гасіння пожеж&nbsp;&nbsp;·&nbsp;&nbsp;1–4 гравці</div>
         </div>
       </div>
-      <div id="unity-warning"> </div>
-      <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
-        <div id="unity-fullscreen-button"></div>
-        <div id="unity-build-title">RetroStyle Games Demo</div>
+
+      <div class="call">
+        <div class="chip chip-call"><span class="dot"></span>Виклик прийнято</div>
+        <h1 class="heading">Вулиця горить.<br><span class="accent">Виїжджаємо!</span></h1>
+        <div class="details">вул. Каштанова, 12&nbsp;&nbsp;·&nbsp;&nbsp;п’ять поверхів&nbsp;&nbsp;·&nbsp;&nbsp;нічна зміна</div>
+        <div class="tip">
+          <div class="tip-header"><span class="chip chip-tip">Порада</span><span class="tip-counter"></span></div>
+          <div class="tip-text"></div>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="status-text">Завантажуємо гру…</span>
+        <span class="status-detail">перший запуск довший, далі гра стартує з кешу</span>
+      </div>
+      <div class="percent">0%</div>
+      <div class="bar"><div class="bar-fill"></div></div>
+
+      <div class="problem" hidden>
+        <div class="problem-title"></div>
+        <div class="problem-text"></div>
+        <button class="problem-button" type="button" onclick="location.reload()">Оновити сторінку</button>
       </div>
     </div>
+
+    <button id="fullscreen" type="button" title="На весь екран (F11)" aria-label="На весь екран">
+      <svg class="enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+      <svg class="leave" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg>
+    </button>
+
+    <div id="toast" hidden><span class="toast-text"></span><button type="button" aria-label="Закрити">✕</button></div>
+
     <script>
-      var canvas = document.querySelector("#unity-canvas");
+      (function () {
+        var tips = [
+          "Струмінь із рукава збиває з ніг — і чужих, і своїх. Цілься у вогонь, а не в колегу.",
+          "Зачинені двері й вікна відкриває сокира. Те, що горить за ними, — справа рукава.",
+          "Батут можна взяти за край і перетягти під вікно. Удвох — швидше, утрьох — смішніше.",
+          "Вогнегасник слабший за рукав, зате його не треба тягнути від машини.",
+          "Рукав не проходить крізь стіни й перекриття: на верхні поверхи веди його сходами.",
+          "Відкритий ствол гальмує того, хто його тримає. Закрий — і біжи.",
+          "Рукав має тридцять метрів. Машину краще поставити ближче до будинку.",
+          "Підійдеш до вогню ближче за метр — обпечешся й відлетиш.",
+          "У кабіні грає радіо. Пожежа на пісні не зважає."
+        ];
+        var tipSeconds = 7;
+        var gameShowsItsOwnScreenWithin = 20000;
 
-      // Shows a temporary message banner/ribbon for a few seconds, or
-      // a permanent error message on top of the canvas if type=='error'.
-      // If type=='warning', a yellow highlight color is used.
-      // Modify or remove this function to customize the visually presented
-      // way that non-critical warnings and error messages are presented to the
-      // user.
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        var canvas = document.getElementById("unity-canvas");
+        var loader = document.getElementById("loader");
+        var fill = loader.querySelector(".bar-fill");
+        var percentText = loader.querySelector(".percent");
+        var statusText = loader.querySelector(".status-text");
+        var statusDetail = loader.querySelector(".status-detail");
+        var tipBox = loader.querySelector(".tip");
+        var tipText = loader.querySelector(".tip-text");
+        var tipCounter = loader.querySelector(".tip-counter");
+        var fullscreen = document.getElementById("fullscreen");
+        var toast = document.getElementById("toast");
+
+        var target = 0;
+        var shown = 0;
+        var started = false;
+        var hidden = false;
+        var failed = false;
+
+        // Tips go round from a random one, like on the game's own loading screen.
+        var tip = Math.floor(Math.random() * tips.length);
+        function showTip() {
+          tipText.textContent = tips[tip];
+          tipCounter.textContent = (tip + 1) + " / " + tips.length;
         }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
+        showTip();
+        var tipTimer = setInterval(function () {
+          tipBox.classList.add("fading");
+          setTimeout(function () {
+            tip = (tip + 1) % tips.length;
+            showTip();
+            tipBox.classList.remove("fading");
+          }, 350);
+        }, tipSeconds * 1000);
+
+        // The bar eases towards the reported progress, so a burst of data reads as water filling the hose.
+        function animate() {
+          if (hidden) {
+            return;
+          }
+          shown += (target - shown) * 0.12;
+          if (target - shown < 0.0005) {
+            shown = target;
+          }
+          fill.style.transform = "scaleX(" + shown.toFixed(4) + ")";
+          percentText.textContent = Math.floor(shown * 100) + "%";
+          requestAnimationFrame(animate);
         }
-        updateBannerVisibility();
-      }
+        requestAnimationFrame(animate);
 
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Out.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/Out.data.unityweb",
-        frameworkUrl: buildUrl + "/Out.framework.js.unityweb",
-        codeUrl: buildUrl + "/Out.wasm.unityweb",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "RetroStyle Games Demo",
-        productVersion: "0.1.0",
-        showBanner: unityShowBanner,
-        // errorHandler: function(err, url, line) {
-        //    alert("error " + err + " occurred at line " + line);
-        //    // Return 'true' if you handled this error and don't want Unity
-        //    // to process it further, 'false' otherwise.
-        //    return true;
-        // },
-      };
+        function setStatus(text, detail) {
+          statusText.textContent = text;
+          statusDetail.textContent = detail;
+        }
 
-      // By default, Unity keeps WebGL canvas render target size matched with
-      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
-      // Set this to false if you want to decouple this synchronization from
-      // happening inside the engine, and you would instead like to size up
-      // the canvas DOM size and WebGL render target sizes yourself.
-      // config.matchWebGLToCanvasSize = false;
+        function showProblem(title, text) {
+          failed = true;
+          loader.classList.add("failed");
+          setStatus(title, "");
+          var problem = loader.querySelector(".problem");
+          problem.querySelector(".problem-title").textContent = title;
+          problem.querySelector(".problem-text").textContent = text;
+          problem.hidden = false;
+        }
 
-      // If you would like all file writes inside Unity Application.persistentDataPath
-      // directory to automatically persist so that the contents are remembered when
-      // the user revisits the site the next time, uncomment the following line:
-      // config.autoSyncPersistentDataPath = true;
-      // This autosyncing is currently not the default behavior to avoid regressing
-      // existing user projects that might rely on the earlier manual
-      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
-      // expected to change.
+        function showToast(text) {
+          toast.querySelector(".toast-text").textContent = text;
+          toast.hidden = false;
+          clearTimeout(showToast.timer);
+          showToast.timer = setTimeout(function () { toast.hidden = true; }, 9000);
+        }
+        toast.querySelector("button").onclick = function () { toast.hidden = true; };
 
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        // Mobile device style: fill the whole browser client area with the game canvas:
+        // The game calls this (WebPage.HideLoader) once its own loading screen, with the same art and layout, is up.
+        window.station67HideLoader = function () {
+          if (hidden || failed) {
+            return;
+          }
+          hidden = true;
+          clearInterval(tipTimer);
+          loader.classList.add("gone");
+          setTimeout(function () { loader.style.display = "none"; }, 600);
+          canvas.focus();
+        };
 
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        document.querySelector("#unity-container").className = "unity-mobile";
-        canvas.className = "unity-mobile";
+        // Fullscreen is the page's: a click asks the browser for it. The canvas already fills the window.
+        function updateFullscreen() {
+          fullscreen.classList.toggle("is-full", !!document.fullscreenElement);
+        }
+        fullscreen.onclick = function () {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(function () {});
+          }
+          canvas.focus();
+        };
+        document.addEventListener("fullscreenchange", updateFullscreen);
+        var idleTimer = 0;
+        document.addEventListener("mousemove", function () {
+          if (document.pointerLockElement) {
+            return;
+          }
+          document.body.classList.add("pointer-active");
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(function () { document.body.classList.remove("pointer-active"); }, 2500);
+        });
+        document.addEventListener("pointerlockchange", function () {
+          if (document.pointerLockElement) {
+            document.body.classList.remove("pointer-active");
+          }
+        });
+        canvas.addEventListener("contextmenu", function (event) { event.preventDefault(); });
 
-        // To lower canvas resolution on mobile devices to gain some
-        // performance, uncomment the following line:
-        // config.devicePixelRatio = 1;
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        if (isMobile) {
+          setStatus("Завантажуємо гру…", "гра зроблена для комп’ютера з клавіатурою й мишею");
+        }
 
+        var probe = document.createElement("canvas");
+        if (!probe.getContext("webgl2")) {
+          showProblem("Браузер не показує 3D", "Грі потрібен WebGL 2. Онови Chrome, Edge або Firefox і перевір, що в налаштуваннях браузера увімкнене апаратне прискорення.");
+          return;
+        }
 
-      } else {
-        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
-        canvas.style.width = "960px";
-        canvas.style.height = "600px";
-      }
+        var config = {
+          arguments: [],
+          dataUrl: "Build/Out.data.unityweb",
+          frameworkUrl: "Build/Out.framework.js.unityweb",
+          codeUrl: "Build/Out.wasm.unityweb",
+          streamingAssetsUrl: "StreamingAssets",
+          companyName: "DefaultCompany",
+          productName: "RetroStyle Games Demo",
+          productVersion: "0.1.0",
+          autoSyncPersistentDataPath: true,
+          showBanner: function (message, type) {
+            if (type === "error") {
+              showToast(message);
+            } else {
+              console.warn(message);
+            }
+          },
+          // Unity would stop the page with an alert. The page says it itself: on the loading screen while the game is
+          // starting, in a small note at the bottom once it runs.
+          errorHandler: function (message) {
+            console.error(message);
+            if (!started) {
+              showProblem("Гра не запустилася", String(message));
+            } else {
+              showToast("Помилка в грі: " + message);
+            }
+            return true;
+          }
+        };
 
-      document.querySelector("#unity-loading-bar").style.display = "block";
-
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
-              }).then((unityInstance) => {
-                document.querySelector("#unity-loading-bar").style.display = "none";
-                document.querySelector("#unity-fullscreen-button").onclick = () => {
-                  unityInstance.SetFullscreen(1);
-                };
-
-              }).catch((message) => {
-                alert(message);
-              });
-            };
-
-      document.body.appendChild(script);
-
+        var script = document.createElement("script");
+        script.src = "Build/Out.loader.js";
+        script.onload = function () {
+          createUnityInstance(canvas, config, function (progress) {
+            target = Math.max(target, progress);
+            if (progress >= 0.9 && !failed) {
+              setStatus("Розпаковуємо…", "ще кілька секунд");
+            }
+          }).then(function (instance) {
+            started = true;
+            target = 1;
+            setStatus("Заступаємо на зміну…", "запуск гри");
+            window.station67 = instance;
+            setTimeout(window.station67HideLoader, gameShowsItsOwnScreenWithin);
+          }).catch(function (message) {
+            showProblem("Гра не запустилася", String(message));
+          });
+        };
+        script.onerror = function () {
+          showProblem("Не вдалося завантажити гру", "Перевір інтернет і онови сторінку.");
+        };
+        document.body.appendChild(script);
+      })();
     </script>
   </body>
 </html>
