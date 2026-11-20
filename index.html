@@ -193,9 +193,44 @@
         });
         canvas.addEventListener("contextmenu", function (event) { event.preventDefault(); });
 
+        // A desktop player reads the raw mouse movement; a browser hands a locked pointer's movement over with the
+        // system's pointer acceleration applied, so the same mouse turned the view differently. Unity locks the pointer
+        // itself: the lock it asks for is made raw where the browser can (Chrome, Edge) and stays as it was elsewhere.
+        var requestPointerLock = HTMLCanvasElement.prototype.requestPointerLock;
+        if (requestPointerLock) {
+          HTMLCanvasElement.prototype.requestPointerLock = function (options) {
+            var element = this;
+            var fallback = function () { return requestPointerLock.call(element, options); };
+            var result;
+            try {
+              result = requestPointerLock.call(element, Object.assign({}, options, { unadjustedMovement: true }));
+            } catch (error) {
+              return fallback();
+            }
+            if (result && typeof result.catch === "function") {
+              return result.catch(function (error) {
+                if (error && error.name === "NotSupportedError") {
+                  return fallback();
+                }
+                console.warn("Pointer lock:", error);
+              });
+            }
+            return result;
+          };
+        }
+
         var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
         if (isMobile) {
           setStatus("Завантажуємо гру…", "гра зроблена для комп’ютера з клавіатурою й мишею");
+        }
+
+        // ?webgl2 starts the game on WebGL 2 even where the browser has WebGPU: the fallback path, to check it by hand.
+        if (/[?&]webgl2(?:[=&]|$)/.test(location.search)) {
+          try {
+            Object.defineProperty(navigator, "gpu", { value: undefined, configurable: true });
+          } catch (error) {
+            console.warn("WebGPU could not be hidden:", error);
+          }
         }
 
         var probe = document.createElement("canvas");
