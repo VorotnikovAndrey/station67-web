@@ -14,6 +14,9 @@
     <type fullname="FlameDemo.Gameplay.Character.Emotes.CharacterEmoteView" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.FirstPerson.CharacterFirstPersonArmsView" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.Footsteps.CharacterFootstepsView" preserve="all" />
+    <type fullname="FlameDemo.Gameplay.Character.Freezing.CharacterFreezeView" preserve="all" />
+    <type fullname="FlameDemo.Gameplay.Character.Freezing.NetworkCharacterFreeze" preserve="all" />
+    <type fullname="FlameDemo.Gameplay.Character.FrostScreen.CharacterFrostScreenView" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.Ik.CharacterBodyIkView" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.Ik.CharacterHeldItemIkProvider" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.Ik.CharacterIkGoals" preserve="all" />
@@ -28,6 +31,8 @@
     <type fullname="FlameDemo.Gameplay.Character.Settings.CharacterConfig" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.Settings.CharacterEmoteConfig" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.Settings.CharacterFootstepConfig" preserve="all" />
+    <type fullname="FlameDemo.Gameplay.Character.Settings.CharacterFreezeConfig" preserve="all" />
+    <type fullname="FlameDemo.Gameplay.Character.Settings.CharacterFrostScreenConfig" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.View.CharacterSeatView" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Character.View.NetworkPlayerProfile" preserve="all" />
     <type fullname="FlameDemo.Gameplay.Interaction.View.CharacterInteractor" preserve="all" />
@@ -144,6 +149,8 @@
     <type fullname="UnityEngine.Light" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
     <type fullname="UnityEngine.Mesh" preserve="all" />
+    <type fullname="UnityEngine.MeshFilter" preserve="all" />
+    <type fullname="UnityEngine.MeshRenderer" preserve="all" />
     <type fullname="UnityEngine.Object" preserve="all" />
     <type fullname="UnityEngine.RectTransform" preserve="all" />
     <type fullname="UnityEngine.Shader" preserve="all" />
